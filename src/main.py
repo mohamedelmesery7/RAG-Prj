@@ -23,7 +23,7 @@ async def startup_span():
     #app.db_client = app.mongodb_conn[settings.MONGODB_DB_NAME]
 
     llm_provider_factory = LLMProviderFactory(settings)
-    vector_db_provider_factory = VectorDbProviderFactory(settings)
+    vectordb_provider_factory = VectorDbProviderFactory(config=settings, db_client=app.db_client)
 
     # generation client
     app.generation_client = llm_provider_factory.create(provider=settings.GENERATION_BACKEND)
@@ -34,12 +34,10 @@ async def startup_span():
     app.embedding_client.set_embedding_model(model_id=settings.EMBEDDING_MODEL_ID,
                                              embedding_size=settings.EMBEDDING_MODEL_SIZE)
     # vector db client
-    app.vector_db_client = vector_db_provider_factory.create(
-        provider=settings.VECTOR_DB_BACKEND,
-        db_path=settings.VECTOR_DB_PATH,
-        distance_method=settings.VECTOR_DB_DISTANCE_METHOD
+    app.vectordb_client = vectordb_provider_factory.create(
+        provider=settings.VECTOR_DB_BACKEND
     )
-    app.vector_db_client.connect()
+    await app.vectordb_client.connect()
 
     app.template_parser = TemplateParser(
         language=settings.PRIMARY_LANG,
@@ -50,7 +48,7 @@ async def startup_span():
 async def shutdown_span():
     #app.mongodb_conn.close() 
     app.db_engine.dispose()
-    app.vector_db_client.disconnect()
+    await app.vectordb_client.disconnect()
     
 app.on_event("startup")(startup_span)
 app.on_event("shutdown")(shutdown_span)

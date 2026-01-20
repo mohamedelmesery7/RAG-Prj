@@ -19,7 +19,7 @@ services:
 
 
   pgvector:
-    image: pgvector/pgvector:pg18-trixie
+    image: pgvector/pgvector:pg17
     container_name: pgvector
     ports:
       - "5432:5432"

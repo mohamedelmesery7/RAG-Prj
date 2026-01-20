@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 import os
 
 from helpers.config import get_settings, Settings
-from controllers import DataController, ProjectController, ProcessController
+from controllers import DataController, NLPController, ProjectController, ProcessController
 import aiofiles
 from models import ResponseSignal
 import logging
@@ -104,7 +104,12 @@ async def process_endpoint(request: Request, project_id: int, process_request: p
     project = await project_model.get_project_or_create_one(
         project_id=project_id
     )
-
+    nlp_controller = NLPController(
+        vectordb_client=request.app.vectordb_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+    )
     asset_model = await AssetModel.create_instance(
             db_client=request.app.db_client
         )
@@ -159,9 +164,11 @@ async def process_endpoint(request: Request, project_id: int, process_request: p
                     )
 
     if do_reset == 1:
+        collection_name = nlp_controller.create_collection_name(project_id=project.project_id)
+        _ = await request.app.vectordb_client.delete_collection(collection_name=collection_name)
+        # delete associated chunks
         _ = await chunk_model.delete_chunks_by_project_id(
-            project_id=project.project_id
-        )
+            project_id=project.project_id)
 
     for asset_id, file_id in project_files_ids.items():
 

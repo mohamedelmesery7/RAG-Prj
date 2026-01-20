@@ -10,3 +10,4 @@
 
 
 "gemma2:9b-instruct-q5_0"  
+sqlalchemy.url = postgresql://postgres:minirag2222@172.24.192.1:5432/minirag
