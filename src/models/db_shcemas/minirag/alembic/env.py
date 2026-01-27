@@ -4,7 +4,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
-from schemes import SQLAlchemyBase
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
@@ -18,6 +18,18 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
+import sys
+from pathlib import Path
+
+# Add parent directory to path to import models
+sys.path.insert(0, str(Path(__file__).resolve().parents[4]))
+
+from models.db_shcemas.minirag.schemes.minirag_base import SQLAlchemyBase
+# Import all models to ensure they're registered
+from models.db_shcemas.minirag.schemes.project import Project
+from models.db_shcemas.minirag.schemes.asset import Asset
+from models.db_shcemas.minirag.schemes.data_chunk import DataChunk
+
 target_metadata = SQLAlchemyBase.metadata
 
 # other values from the config, defined by the needs of env.py,
