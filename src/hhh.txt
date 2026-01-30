@@ -76,3 +76,55 @@ docker compose -f docker.compose.yml down
 
 
       exec "$@"
+
+      cp github_user_key /home/ubuntu
+
+
+
+      deploy.yml
+      
+name: Deploy Develop Branch to Server
+
+on:
+  push:
+    branches:
+      - develop  # changeable to your develop branch name
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.2
+       # changeable to your server details
+        with: 
+          host: ${{ secrets.SSH_DEVELOP_HOST_IP }} # from GitHub Secrets
+          username: github_user
+          key: ${{ secrets.SSH_DEVELOP_PRIVATE_KEY }} # from GitHub Secrets 
+          # now you are  in server 
+          script: |
+            cd /home/github_user/workspace/mini-rag
+            git checkout develop 
+            git pull
+            sudo systemctl restart minirag.service
+            echo "Waiting..."
+            sleep 20
+
+            for i in {1..6}; do
+              if ss -tuln | grep -q ':80'; then
+                echo "✅ Port 80 is now active."
+                break
+              else
+                echo "⏳ Port 80 not ready yet. Retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+
+            if ! ss -tuln | grep -q ':80'; then
+              echo "❌ Service failed to start on port 80"
+              exit 1
+            fi
