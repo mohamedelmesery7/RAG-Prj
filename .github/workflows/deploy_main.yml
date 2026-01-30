@@ -16,7 +16,7 @@ jobs:
       - name: Update Code and Restart Service
         run: |
           cd ~/work_dir/RAG-Prj/docker
-          git pull origin develop
+          git pull origin tut-11
           sudo systemctl restart minirag.service
           sleep 30
 
