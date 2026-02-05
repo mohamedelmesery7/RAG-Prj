@@ -72,6 +72,7 @@ docker compose -f docker.compose.yml down
       docker-compose up --build
       docker-compose up docker.compose.yml --build
       docker compose logs -f nginx
+      docker compose -f docker.compose.yml up -d redis rabbitmq
 
 
 
@@ -128,3 +129,9 @@ jobs:
               echo "❌ Service failed to start on port 80"
               exit 1
             fi
+
+
+
+      python -m celery -A celery_app worker --loglevel=info    
+      python -m celery -A celery_app worker --queues=default,file_processing  
+      uvicorn main:app --reload
