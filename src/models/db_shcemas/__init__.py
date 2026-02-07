@@ -1,1 +1,1 @@
-from models.db_shcemas.minirag.schemes import Project, DataChunk, Asset, RetrievedDocument
+from models.db_shcemas.minirag.schemes import CeleryTaskExecution, Project, DataChunk, Asset, RetrievedDocument,CeleryTaskExecution

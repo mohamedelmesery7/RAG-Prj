@@ -1,5 +1,5 @@
 {
-    "file_id": "x30k58wtbqem_BusinessImpact.txt",
+    
     "chunk_size": 512,
     "overlap_size": 50
     ,"do_reset":1
@@ -72,7 +72,8 @@ docker compose -f docker.compose.yml down
       docker-compose up --build
       docker-compose up docker.compose.yml --build
       docker compose logs -f nginx
-      docker compose -f docker.compose.yml up -d redis rabbitmq
+      docker compose -f docker.compose.yml up -d redis rabbitmq pgvector
+      docker compose -f docker.compose.yml down  redis rabbitmq pgvector
 
 
 
@@ -133,5 +134,7 @@ jobs:
 
 
       python -m celery -A celery_app worker --loglevel=info    
-      python -m celery -A celery_app worker --queues=default,file_processing  
+      python -m celery -A celery_app worker --queues=default,file_processing,data_indexing,process_workflow 
       uvicorn main:app --reload
+
+      python -m celery -A celery_app flower --conf=flowerconfig.py
