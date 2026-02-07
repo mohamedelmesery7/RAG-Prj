@@ -1,5 +1,5 @@
 {
-    "file_id": "x30k58wtbqem_BusinessImpact.txt",
+    
     "chunk_size": 512,
     "overlap_size": 50
     ,"do_reset":1
@@ -10,3 +10,131 @@
 
 
 "gemma2:9b-instruct-q5_0"  
+sqlalchemy.url = postgresql://postgres:minirag2222@localhost5432/minirag
+
+
+
+
+
+
+
+services:
+  mongodb:
+    image: mongo:8.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb:/data/db
+
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${MONGO_INITDB_ROOT_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGO_INITDB_ROOT_PASSWORD}
+
+
+    networks:
+      - backend
+    
+    restart: always
+
+
+  pgvector:
+    image: pgvector/pgvector:pg17
+    container_name: pgvector
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgvector_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    networks:
+      - backend
+    restart: always
+
+networks:
+  backend:
+
+volumes:
+  mongodb:
+  pgvector_data:
+
+docker compose -f docker.compose.yml up
+docker compose -f docker.compose.yml down
+      
+      docker compose -f docker.compose.yml up  pgvector 
+      docker compose -f docker.compose.yml up -d pgvector
+      docker compose -f docker.compose.yml up pgvector qdrant postgres-exporter
+      docker compose -f docker.compose.yml down pgvector qdrant postgres-exporter
+      docker compose -f docker.compose.yml down -v
+      docker compose -f docker.compose.yml up  nginx
+      docker compose -f docker.compose.yml down  nginx
+      docker compose  -f docker.compose.yml restart nginx
+      docker-compose up --build
+      docker-compose up docker.compose.yml --build
+      docker compose logs -f nginx
+      docker compose -f docker.compose.yml up -d redis rabbitmq pgvector
+      docker compose -f docker.compose.yml down  redis rabbitmq pgvector
+
+
+
+      exec "$@"
+
+      cp github_user_key /home/ubuntu
+
+
+
+      deploy.yml
+      
+name: Deploy Develop Branch to Server
+
+on:
+  push:
+    branches:
+      - develop  # changeable to your develop branch name
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4.2.2
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.2.2
+       # changeable to your server details
+        with: 
+          host: ${{ secrets.SSH_DEVELOP_HOST_IP }} # from GitHub Secrets
+          username: github_user
+          key: ${{ secrets.SSH_DEVELOP_PRIVATE_KEY }} # from GitHub Secrets 
+          # now you are  in server 
+          script: |
+            cd /home/github_user/workspace/mini-rag
+            git checkout develop 
+            git pull
+            sudo systemctl restart minirag.service
+            echo "Waiting..."
+            sleep 20
+
+            for i in {1..6}; do
+              if ss -tuln | grep -q ':80'; then
+                echo "✅ Port 80 is now active."
+                break
+              else
+                echo "⏳ Port 80 not ready yet. Retrying in 5 seconds..."
+                sleep 5
+              fi
+            done
+
+            if ! ss -tuln | grep -q ':80'; then
+              echo "❌ Service failed to start on port 80"
+              exit 1
+            fi
+
+
+
+      python -m celery -A celery_app worker --loglevel=info    
+      python -m celery -A celery_app worker --queues=default,file_processing,data_indexing,process_workflow 
+      uvicorn main:app --reload
+
+      python -m celery -A celery_app flower --conf=flowerconfig.py

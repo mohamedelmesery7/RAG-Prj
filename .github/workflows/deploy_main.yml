@@ -1,0 +1,33 @@
+name: Deploy MiniRAG 
+
+on:
+  push:
+    branches:
+      - tut-11
+
+jobs:
+  deploy:
+    runs-on: self-hosted 
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Update Code and Restart Service
+        run: |
+          cd ~/work_dir/RAG-Prj/docker
+          git pull origin tut-11
+          sudo systemctl restart minirag.service
+          sleep 30
+
+      - name: Health Check (Verify RAG API)
+        run: |
+          for i in {1..5}; do
+            if ss -tuln | grep -q ':80'; then
+              echo "✅ Tut-11 Deployment Successful"
+              exit 0
+            else
+              sleep 10
+            fi
+          done
+          exit 1

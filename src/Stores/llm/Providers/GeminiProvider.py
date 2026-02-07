@@ -3,7 +3,7 @@ from google import genai
 
 from ..LLMInterface import LLMInterface
 from ..LLMEnums import DocumentTypeEnum, GeminiEnums
-
+from typing import List ,Union
 
 class GeminiProvider(LLMInterface):
     def __init__(
@@ -71,15 +71,17 @@ class GeminiProvider(LLMInterface):
             self.logger.error(f"Gemini generate_text error: {e}")
             return None
 
-    def embed_text(self, text: str, document_type: str = None):
+    def embed_text(self, text: Union[str, List[str]], document_type: str = None):
         if not self.embedding_model_id:
             self.logger.error("Embedding model for Gemini was not set")
             return None
+        if isinstance(text, str):
+            text = [text]
 
         try:
             resp = self.client.models.embed_content(
                 model=self.embedding_model_id,
-                contents=[self.process_text(text)],
+                contents=[self.process_text(t) for t in text],
             )
 
             embedding = None
@@ -100,8 +102,7 @@ class GeminiProvider(LLMInterface):
             if not embedding:
                 self.logger.error("Error while embedding text with Gemini")
                 return None
-
-            return embedding
+            return [c for c in embedding]
         except Exception as e:
             self.logger.error(f"Gemini embed_text error: {e}")
             return None
@@ -109,5 +110,5 @@ class GeminiProvider(LLMInterface):
     def construct_prompt(self, prompt: str, role: str):
         return {
             "role": role,
-            "text": self.process_text(prompt),
+            "text": prompt,
         }
